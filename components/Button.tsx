@@ -1,0 +1,18 @@
+import React from "react";
+import clsx from "clsx";
+
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
+
+export default function Button({children, className, ...props}: ButtonProps) {
+    return (
+        <button
+            className= {clsx(
+                "bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 w-full",
+                className
+    )}
+            {...props}
+            >
+            {children}
+        </button>
+    )
+}

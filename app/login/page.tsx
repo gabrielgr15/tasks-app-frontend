@@ -36,7 +36,7 @@ export default function LoginPage() {
         
       }  
     }catch (error){
-      
+      console.log('Login failed:', error);
     }
   }
 

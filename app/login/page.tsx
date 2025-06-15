@@ -18,18 +18,19 @@ export default function LoginPage() {
   const handleSubmit = async (event : React.FormEvent) => {
     event.preventDefault();
     try{
-      const response = await fetch('task-app-api-gateway-production.up.railway.app/api/users/auth/login', {
+      const response = await fetch('http://localhost:4000/api/users/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
+        credentials: 'include',
       })
       const data = await response.json()
-
+      console.log('Login response:', data);  
       if (response.ok) {
         localStorage.setItem('authToken', data.accessToken)
-        login(email, password);
+        await login(email, password);
         router.push('/dashboard');
       }
       else {

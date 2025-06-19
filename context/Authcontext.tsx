@@ -1,54 +1,132 @@
 'use client';
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
-interface User {
-  email: string;
-}
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: User | null;
-  login: (email: string, password: string) => Promise<void>;
+  accessToken: string | null;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<{ success:boolean, error?: string}>;
+  register: (username: string, email: string, password: string) => Promise<{ success:boolean, error?: string}>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
-  user: null,
-  login: async () => { throw new Error('login function must be used within AuthProvider'); },
-  logout: () => { throw new Error('logout function must be used within AuthProvider'); },
+  accessToken: null,
+  isLoading: true,
+  login: async (_email, _password) => {
+     throw new Error('login function must be used within AuthProvider') 
+  },
+  register: (_username, _email, _password) => {
+    throw new Error('register function must be used within AuthProvider')
+  },
+  logout: () => { throw new Error('logout function must be used within AuthProvider')}  
 });
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
 
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [accessToken, setAccessToken] = useState<string|null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+
+  useEffect(() => {
+    const tryRefreshToken = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/auth/refresh`, {
+          method: 'POST',
+          credentials: 'include'
+        })
+
+        const data = await response.json()
+
+        if (!response.ok){
+          throw new Error(data.message || 'Could not refresh token')
+        }
+        setAccessToken(data.accessToken)
+        setIsAuthenticated(true)
+
+      } catch (error){
+          console.log('No valid refresh token found, user is not logged in')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    tryRefreshToken()
+  }, [])
+
+
+  const register = async (username: string, email: string, password: string) => {
+    try{
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/auth/register`,{
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json'},
+        body: JSON.stringify({ username, email, password }),
+        credentials: 'include'
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return {success: false, error: data.message || 'Registration failed'}
+      }
+
+      setAccessToken(data.accessToken)
+      setIsAuthenticated(true)
+
+      return { success: true }
+
+    }catch (error){
+      console.error("Registration error", error)
+      return {success: false, error: 'An unexpected error occurred. Please try again'}
+    }
+  }
 
   const login = async (email: string, password: string) => {
-    console.log('Attempting login with:', email, password);
-    setIsAuthenticated(true);
-    setUser({ email: email });
-  };
+    try{
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/auth/login`,{
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json'},
+        body: JSON.stringify({ email, password }),
+        credentials: 'include'
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return {success: false, error: data.message || 'Registration failed'}
+      }
+
+      setAccessToken(data.accessToken)
+      setIsAuthenticated(true)
+
+      return { success: true }
+
+    }catch (error){
+      console.error("Registration error", error)
+      return {success: false, error: 'An unexpected error occurred. Please try again'}
+    }
+  }
 
   const logout = () => {
     console.log('Logging out');
     setIsAuthenticated(false);
-    setUser(null);
   };
 
   const contextValue: AuthContextType = {
     isAuthenticated,
-    user,
+    accessToken,
+    isLoading,
     login,
     logout,
+    register
   };
 
   return (
     <AuthContext.Provider value={contextValue}>
-      {children}
+      {!isLoading && children}
     </AuthContext.Provider>
   );
 };

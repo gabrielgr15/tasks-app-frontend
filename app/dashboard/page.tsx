@@ -7,7 +7,7 @@ import TaskCard from "@/components/TaskCard";
 import ActivityItem from "@/components/ActivityItem";
 
 export default function DashboardPage() {
-  const {isAuthenticated, user} = useAuth();
+  const {isAuthenticated} = useAuth();
   const router = useRouter();
 
   useEffect(() => {

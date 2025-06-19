@@ -11,33 +11,22 @@ import Button from "@/components/Button";
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   const { login } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (event : React.FormEvent) => {
     event.preventDefault();
-    try{
-      const response = await fetch('http://localhost:4000/api/users/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include',
-      })
-      const data = await response.json()
-      console.log('Login response:', data);  
-      if (response.ok) {
-        localStorage.setItem('authToken', data.accessToken)
-        await login(email, password);
-        router.push('/dashboard');
-      }
-      else {
-        
-      }  
-    }catch (error){
-      console.log('Login failed:', error);
+    
+    setIsLoading(true)
+    const result = await login(email, password)
+    setIsLoading(false)
+
+    if (result.success){
+      router.push('/dashboard')
+    } else {
+      
     }
   }
 
@@ -57,8 +46,8 @@ export default function LoginPage() {
           value = {password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <Button type="submit">
-          Login
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? 'Loading':'Log in'}
         </Button>
       </form>
     </Container>

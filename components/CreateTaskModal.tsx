@@ -4,6 +4,7 @@ import { useAuth } from "@/context/Authcontext"
 import Button from "./Button"
 import Input from "./Input"
 import { mutate } from "swr"
+import { ITasksApiResponse } from "@/types"
 
 interface CreateTaskModalProps {
     onClose: () => void
@@ -37,7 +38,10 @@ export default function CreateTaskModal({ onClose }: CreateTaskModalProps) {
             if (!response.ok) {
                 throw new Error(data.message || 'Failed to create task'); 
             }
-            await mutate(tasksKey, (currentData: any) => {
+            await mutate(tasksKey, (currentData: ITasksApiResponse | undefined) => {
+                if (!currentData) {
+                    return undefined;
+                }
                 return {
                     ...currentData,
                     tasks: [data.task, ...currentData.tasks]

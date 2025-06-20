@@ -9,28 +9,23 @@ import ActivityItem from "@/components/ActivityItem";
 import CreateTaskModal from "@/components/CreateTaskModal";
 import {fetcher} from "@/utils/fetcher";
 import useSWR from "swr";
+import { ITask, ITasksApiResponse } from "@/types";
 
-interface TaskItem {
-  _id: string;
-  title: string;
-  description?: string;
-  status: string;
-  user: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
 export default function DashboardPage() {
   const { isAuthenticated, accessToken } = useAuth();
   const router = useRouter();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-
+  const { data, error, isLoading } = useSWR<ITasksApiResponse>(
+    accessToken ? [`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/tasks`, accessToken]: null,
+    fetcher
+  )
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.push('/login');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isLoading, router]);
 
   if (!isAuthenticated) {
     return (
@@ -38,12 +33,7 @@ export default function DashboardPage() {
         <p className="text-xl text-center text-gray-500">Redirecting to login...</p>
       </Container>
     );
-  }
-
-  const {data, error, isLoading} = useSWR(
-    [`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/tasks`, accessToken],
-    fetcher
-  )
+  }  
 
   if (isLoading) {
     return (
@@ -63,6 +53,10 @@ export default function DashboardPage() {
     );
   }
 
+  if (!data) {
+    return <Container><p>No data available.</p></Container>;
+  }
+
 
   return (
     <Container>
@@ -75,7 +69,7 @@ export default function DashboardPage() {
             <p className="text-gray-600">You have no tasks yet. Add one!</p>
           ) : (
             <div className="space-y-4">
-              {data.tasks.map((task: TaskItem) => (
+                {data.tasks.map((task: ITask) => (
                 <TaskCard
                   key={task._id}
                   title={task.title}

@@ -4,17 +4,18 @@ import { useAuth } from "@/context/Authcontext"
 import Button from "./Button"
 import Input from "./Input"
 import { mutate } from "swr"
-import { ITasksApiResponse } from "@/types"
+import { ITask, ITasksApiResponse } from "@/types"
 
 interface CreateTaskModalProps {
     onClose: () => void
+    task: ITask
 }
 
-export default function CreateTaskModal({ onClose }: CreateTaskModalProps) {
+export default function UpdateTaskModal({ onClose, task }: CreateTaskModalProps) {
     const { accessToken } = useAuth()
-    const [title, setTitle] = useState('')
-    const [description, setDescription] = useState('')
-    const [status, setStatus] = useState('')
+    const [title, setTitle] = useState(task.title)
+    const [description, setDescription] = useState(task.description)
+    const [status, setStatus] = useState(task.status)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const handleSubmit = async (event: React.FormEvent) => {
@@ -24,8 +25,8 @@ export default function CreateTaskModal({ onClose }: CreateTaskModalProps) {
         const tasksKey = [`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/tasks`, accessToken]
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/tasks`, {
-                method: 'POST',
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/tasks/${task._id}`, {
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`
@@ -42,11 +43,17 @@ export default function CreateTaskModal({ onClose }: CreateTaskModalProps) {
                 if (!currentData) {
                     return undefined;
                 }
+                const updatedTasks = currentData.tasks.map(existingTask => {
+                    if (existingTask._id === data.task._id) {
+                        return data.task;
+                    }
+                    return existingTask;
+                });
                 return {
                     ...currentData,
-                    tasks: [data.task, ...currentData.tasks]
+                    tasks: updatedTasks
                 };
-            }, false)
+            }, false);
             onClose()
 
         } catch (error) {

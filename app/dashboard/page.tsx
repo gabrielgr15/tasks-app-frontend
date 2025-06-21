@@ -10,12 +10,16 @@ import CreateTaskModal from "@/components/CreateTaskModal";
 import {fetcher} from "@/utils/fetcher";
 import useSWR from "swr";
 import { ITask, ITasksApiResponse } from "@/types";
+import UpdateTaskModal from "@/components/UpdateTaskModal";
+import DeleteTaskModal from "@/components/DeleteTaskModal";
 
 
 export default function DashboardPage() {
   const { isAuthenticated, accessToken } = useAuth();
   const router = useRouter();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [taskToEdit, setTaskToEdit] = useState<ITask | null>(null)
+  const [taskToDelete, setTaskToDelete] = useState<ITask | null>(null)
   const { data, error, isLoading } = useSWR<ITasksApiResponse>(
     accessToken ? [`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/tasks`, accessToken]: null,
     fetcher
@@ -57,6 +61,9 @@ export default function DashboardPage() {
     return <Container><p>No data available.</p></Container>;
   }
 
+  const handleStartEdit = (task: ITask) => setTaskToEdit(task)
+  const handleStartDelete = (task: ITask) => setTaskToDelete(task)
+
 
   return (
     <Container>
@@ -72,9 +79,9 @@ export default function DashboardPage() {
                 {data.tasks.map((task: ITask) => (
                 <TaskCard
                   key={task._id}
-                  title={task.title}
-                  description={task.description}
-                  status={task.status}
+                  task={task}
+                  onEditClick={() => handleStartEdit(task)}
+                  onDeleteClick={() => handleStartDelete(task)}
                 />
               ))}
             </div>
@@ -100,6 +107,8 @@ export default function DashboardPage() {
         </div>
       </div>
       {isCreateModalOpen && <CreateTaskModal onClose={() => setIsCreateModalOpen(false)}/>}
+      {taskToEdit && <UpdateTaskModal task={taskToEdit} onClose={() => setTaskToEdit(null)}/>}
+      {taskToDelete && <DeleteTaskModal task={taskToDelete} onClose={() => setTaskToDelete(null)}/>}
     </Container>
   );
 }

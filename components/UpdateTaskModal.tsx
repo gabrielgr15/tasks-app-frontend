@@ -57,7 +57,7 @@ export default function UpdateTaskModal({ onClose, task }: CreateTaskModalProps)
             onClose()
 
         } catch (error) {
-            console.error("Failed to create task:", error);
+            console.error("Failed to update task:", error);
         } finally {
             setIsSubmitting(false)
         }

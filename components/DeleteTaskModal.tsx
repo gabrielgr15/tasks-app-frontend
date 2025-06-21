@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/context/Authcontext";
-import Button from "./Button";
 import { mutate } from "swr";
 import { ITask, ITasksApiResponse } from "@/types";
 
@@ -49,8 +48,8 @@ export default function DeleteTaskModal({ onClose, task }: DeleteTaskModalProps)
 
             onClose();
 
-        } catch (err: any) {
-            setError(err.message);
+        } catch (error) {
+            console.error("Failed to delete task:", error);
         } finally {
             setIsDeleting(false);
         }
@@ -64,7 +63,7 @@ export default function DeleteTaskModal({ onClose, task }: DeleteTaskModalProps)
 
                 <p className="mb-4 text-gray-300">
                     Are you sure you want to delete the task: <br />
-                    <span className="font-semibold text-white mt-1 block">"{task.title}"</span>
+                    <span className="font-semibold text-white mt-1 block">&ldquo;{task.title}&rdquo;</span>
                 </p>
 
                 <p className="text-sm text-gray-500 mb-6">This action cannot be undone.</p>
